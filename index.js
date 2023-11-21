@@ -27,9 +27,17 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
 
+    const userCollection = client.db("bistroDb").collection("users");
     const menuCollection = client.db("bistroDb").collection("menu");
     const reviewCollection = client.db("bistroDb").collection("reviews");
     const cartCollection = client.db("bistroDb").collection("carts");
+
+    // jwt related api
+    app.post('/users', async (req, res) => {
+        const user = req.body;
+        const result = await userCollection.insertOne(user);
+        res.send(result);
+      })
 
     //menus data load
     app.get('/menu', async (req, res) => {
