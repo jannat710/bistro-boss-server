@@ -148,29 +148,29 @@ async function run() {
         app.post('/payments', async (req, res) => {
             const payment = req.body;
             const paymentResult = await paymentCollection.insertOne(payment);
-      
-             //  carefully delete each item from the cart
+
+            //  carefully delete each item from the cart
             console.log('payment info', payment);
             const query = {
-              _id: {
-                $in: payment.cartIds.map(id => new ObjectId(id))
-              }
+                _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                }
             };
-      
+
             const deleteResult = await cartCollection.deleteMany(query);
-      
+
             res.send({ paymentResult, deleteResult });
-          })
+        })
 
 
-          app.get('/payments/:email', verifyToken, async (req, res) => {
+        app.get('/payments/:email', verifyToken, async (req, res) => {
             const query = { email: req.params.email }
             if (req.params.email !== req.decoded.email) {
-              return res.status(403).send({ message: 'forbidden access' });
+                return res.status(403).send({ message: 'forbidden access' });
             }
             const result = await paymentCollection.find(query).toArray();
             res.send(result);
-          })
+        })
 
         //menus data load
         app.get('/menu', async (req, res) => {
@@ -246,6 +246,26 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await cartCollection.deleteOne(query);
             res.send(result);
+        })
+
+
+
+        // stats or analytics
+        app.get('/admin-stats', async (req, res) => {
+            const users = await userCollection.estimatedDocumentCount();
+            const menuItems = await menuCollection.estimatedDocumentCount();
+            const orders = await paymentCollection.estimatedDocumentCount();
+
+               // this is not the best way
+      const payments = await paymentCollection.find().toArray();
+      const revenue = payments.reduce((total, payment) => total + payment.price, 0);
+
+            res.send({
+                users,
+                menuItems,
+                orders,
+                revenue
+            })
         })
 
 
